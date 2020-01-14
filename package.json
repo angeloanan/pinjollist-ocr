@@ -1,0 +1,14 @@
+{
+  "name": "pinjollist-ocr",
+  "version": "1.0.0",
+  "description": "OCR for Pinjollist DB",
+  "main": "index.js",
+  "author": "Christopher Angelo<anandavid2002@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "tesseract.js-node": "^0.1.0"
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
+  }
+}
