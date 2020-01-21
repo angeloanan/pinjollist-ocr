@@ -54,8 +54,8 @@ fs.readdir('./img', async (err, files) => {
             company_name: regexedTxt[1],
             platform_name: regexedTxt[2]
           })
-          loadS.succeed('Added to JSON Output')
         })
+        if (loadS.isSpinning) loadS.succeed(`Added ${file} to JSON Output`)
       }
     })
     if (res.output === 'JSON') return console.log(JSON.stringify(jsonOut))
