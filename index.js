@@ -1,3 +1,5 @@
+const inquirer = require('inquirer')
+const spinner = require('ora')
 const getWorker = require('tesseract.js-node')
 const fs = require('fs')
 
@@ -8,16 +10,28 @@ fs.readdir('./img', async (err, files) => {
   }
   if (files.length === 0) exitWithError('No images found on ./img/')
 
-  console.log('Processing...')
-
   const ocr = await getWorker({
     tessdata: './tessdata/',
     languages: ['ind']
   })
 
-  files.forEach(async (file) => {
-    const text = await ocr.recognize('./img/' + file, 'ind')
-    console.log(text)
+  const promptFiles = ['All', ...files]
+
+  inquirer.prompt([{
+    type: 'checkbox',
+    name: 'file',
+    message: 'Which files to process?',
+    choices: promptFiles,
+    default: 0
+  }]).then(async res => {
+    let selectedFiles
+    if (res.file.includes('All')) { selectedFiles = files } else { selectedFiles = res.file }
+
+    selectedFiles.forEach((file) => {
+      const loadS = spinner(`Loading file ${file} ...`).start()
+      const text = ocr.recognize('./img/' + file, 'ind')
+      loadS.succeed(`Output file: ${file}\n${text}`)
+    })
   })
 })
 
