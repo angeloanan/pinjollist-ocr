@@ -3,8 +3,10 @@ const spinner = require('ora')
 const getWorker = require('tesseract.js-node')
 const fs = require('fs')
 
+const fintechRegex = /([^(]+)\(([^)]+)\)/
+
 fs.readdir('./img', async (err, files) => {
-  if (err.code === 'ENOENT') {
+  if (err && err.code === 'ENOENT') {
     fs.mkdirSync('./img')
     exitWithError('Folder not found. Put your pictures to process in ./img/')
   }
@@ -23,15 +25,40 @@ fs.readdir('./img', async (err, files) => {
     message: 'Which files to process?',
     choices: promptFiles,
     default: 0
+  }, {
+    type: 'list',
+    name: 'output',
+    message: 'What will be your output?',
+    choices: ['Raw', 'JSON'],
+    defaults: 'Raw'
   }]).then(async res => {
+    // jsonOut will only be used when JSON is the output
+    const jsonOut = []
     let selectedFiles
+    // If All is selected, set all files in ./img/ to be analyzed
     if (res.file.includes('All')) { selectedFiles = files } else { selectedFiles = res.file }
 
     selectedFiles.forEach((file) => {
       const loadS = spinner(`Loading file ${file} ...`).start()
-      const text = ocr.recognize('./img/' + file, 'ind')
-      loadS.succeed(`Output file: ${file}\n${text}`)
+      const OCROutput = ocr.recognize('./img/' + file, 'ind')
+
+      // Branching on Raw or JSON
+      if (res.output === 'Raw') {
+        // Selected Raw
+        loadS.succeed(`Output file: ${file}\n${OCROutput}`)
+      } else if (res.output === 'JSON') {
+        const fintechArray = OCROutput.split('\n').filter(a => a !== '')
+        fintechArray.forEach(txt => {
+          const regexedTxt = fintechRegex.exec(txt)
+          jsonOut.push({
+            company_name: regexedTxt[1],
+            platform_name: regexedTxt[2]
+          })
+          loadS.succeed('Added to JSON Output')
+        })
+      }
     })
+    if (res.output === 'JSON') return console.log(JSON.stringify(jsonOut))
   })
 })
 
